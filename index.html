@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trello AI - Intelligent Task Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Trello AI</h1>
+        <div class="header-controls">
+            <button id="ai-assist-btn" class="ai-button">🤖 AI Assistant</button>
+            <button id="add-board-btn" class="btn-primary">+ Add Board</button>
+        </div>
+    </header>
+
+    <div id="ai-panel" class="ai-panel hidden">
+        <div class="ai-header">
+            <h3>AI Assistant</h3>
+            <button id="close-ai-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="ai-chat">
+            <div id="ai-messages" class="ai-messages"></div>
+            <div class="ai-input-container">
+                <input type="text" id="ai-input" placeholder="Ask AI to help with your tasks..." />
+                <button id="ai-send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="board-container" id="boards-container">
+        <!-- Boards will be dynamically added here -->
+    </main>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Board</h3>
+                <button id="modal-close" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="modal-input" placeholder="Enter board name..." />
+                <div class="modal-actions">
+                    <button id="modal-cancel" class="btn-secondary">Cancel</button>
+                    <button id="modal-confirm" class="btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
