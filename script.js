@@ -2,6 +2,8 @@ class TrelloAI {
     constructor() {
         this.boards = JSON.parse(localStorage.getItem('trello-boards') || '[]');
         this.aiMessages = [];
+        this.hrMessages = [];
+        this.hrApiUrl = 'http://localhost:8000'; // HR API endpoint
         this.init();
     }
 
@@ -21,6 +23,19 @@ class TrelloAI {
         document.getElementById('ai-send-btn').addEventListener('click', () => this.sendAIMessage());
         document.getElementById('ai-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.sendAIMessage();
+        });
+
+        // HR Panel
+        document.getElementById('hr-bot-btn').addEventListener('click', () => this.toggleHRPanel());
+        document.getElementById('close-hr-btn').addEventListener('click', () => this.toggleHRPanel());
+        document.getElementById('hr-send-btn').addEventListener('click', () => this.sendHRMessage());
+        document.getElementById('hr-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.sendHRMessage();
+        });
+
+        // HR Quick Actions
+        document.querySelectorAll('.hr-quick-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.handleHRQuickAction(e.target.dataset.action));
         });
 
         // Modal
@@ -383,6 +398,119 @@ class TrelloAI {
 
     saveBoards() {
         localStorage.setItem('trello-boards', JSON.stringify(this.boards));
+    }
+
+    // HR Panel Methods
+    toggleHRPanel() {
+        const panel = document.getElementById('hr-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    async sendHRMessage() {
+        const input = document.getElementById('hr-input');
+        const message = input.value.trim();
+        
+        if (!message) return;
+        
+        this.hrMessages.push({ type: 'user', content: message });
+        this.renderHRMessages();
+        
+        input.value = '';
+        
+        try {
+            const response = await this.callHRAPI('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message,
+                    user_id: 'emp_001'
+                })
+            });
+            
+            if (response.response) {
+                this.hrMessages.push({ type: 'hr', content: response.response });
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (error) {
+            console.error('HR API Error:', error);
+            // Fallback to local HR responses
+            const fallbackResponse = this.generateHRFallbackResponse(message);
+            this.hrMessages.push({ type: 'hr', content: fallbackResponse });
+        }
+        
+        this.renderHRMessages();
+    }
+
+    async handleHRQuickAction(action) {
+        const actions = {
+            'leave-balance': 'What is my current leave balance?',
+            'holidays': 'What are the upcoming company holidays?',
+            'policies': 'Tell me about HR policies',
+            'directory': 'Show me the employee directory'
+        };
+        
+        const message = actions[action];
+        if (message) {
+            // Simulate user clicking on quick action
+            document.getElementById('hr-input').value = message;
+            await this.sendHRMessage();
+        }
+    }
+
+    async callHRAPI(endpoint, options = {}) {
+        const url = `${this.hrApiUrl}${endpoint}`;
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    }
+
+    generateHRFallbackResponse(userMessage) {
+        const lowerMessage = userMessage.toLowerCase();
+        
+        if (lowerMessage.includes('leave') || lowerMessage.includes('vacation') || lowerMessage.includes('balance')) {
+            return "Your current leave balance:\n• Vacation Days: 15 remaining\n• Sick Days: 10 remaining\n• Personal Days: 5 remaining\n\nWould you like to submit a leave request?";
+        }
+        
+        if (lowerMessage.includes('holiday') || lowerMessage.includes('calendar')) {
+            return "Upcoming company holidays:\n• Labor Day: September 2, 2024\n• Thanksgiving: November 28, 2024\n• Christmas: December 25, 2024\n\nAll holidays are paid time off for full-time employees.";
+        }
+        
+        if (lowerMessage.includes('policy') || lowerMessage.includes('policies')) {
+            return "HR Policies Available:\n• Leave Policy: Vacation, sick, and personal time guidelines\n• Remote Work Policy: Work-from-home arrangements\n• Benefits: Health insurance, 401k, professional development\n• Code of Conduct: Workplace behavior expectations\n\nWhich policy would you like to know more about?";
+        }
+        
+        if (lowerMessage.includes('directory') || lowerMessage.includes('employee') || lowerMessage.includes('contact')) {
+            return "Employee Directory:\n• Engineering: John Doe, Sarah Johnson\n• Management: Jane Smith (Manager)\n• HR: Contact hr@company.com for assistance\n\nFor specific contact information, please contact HR directly.";
+        }
+        
+        return "I'm your HR assistant! I can help you with:\n\n• Leave balance and vacation requests\n• Company holidays and calendar\n• HR policies and procedures\n• Employee directory information\n• Benefits and compensation questions\n\nWhat would you like to know about?";
+    }
+
+    renderHRMessages() {
+        const container = document.getElementById('hr-messages');
+        container.innerHTML = '';
+        
+        this.hrMessages.forEach(message => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `hr-message ${message.type}`;
+            messageDiv.innerHTML = message.content.replace(/\n/g, '<br>');
+            container.appendChild(messageDiv);
+        });
+        
+        container.scrollTop = container.scrollHeight;
     }
 }
 

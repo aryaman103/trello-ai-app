@@ -11,6 +11,7 @@
         <h1>Trello AI</h1>
         <div class="header-controls">
             <button id="ai-assist-btn" class="ai-button">🤖 AI Assistant</button>
+            <button id="hr-bot-btn" class="hr-button">👥 HR Bot</button>
             <button id="add-board-btn" class="btn-primary">+ Add Board</button>
         </div>
     </header>
@@ -26,6 +27,27 @@
                 <input type="text" id="ai-input" placeholder="Ask AI to help with your tasks..." />
                 <button id="ai-send-btn">Send</button>
             </div>
+        </div>
+    </div>
+
+    <div id="hr-panel" class="hr-panel hidden">
+        <div class="hr-header">
+            <h3>HR Assistant</h3>
+            <button id="close-hr-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="hr-chat">
+            <div id="hr-messages" class="hr-messages"></div>
+            <div class="hr-input-container">
+                <input type="text" id="hr-input" placeholder="Ask HR about policies, leave, benefits..." />
+                <button id="hr-send-btn">Send</button>
+            </div>
+        </div>
+        <div class="hr-quick-actions">
+            <h4>Quick Actions</h4>
+            <button class="hr-quick-btn" data-action="leave-balance">Check Leave Balance</button>
+            <button class="hr-quick-btn" data-action="holidays">Company Holidays</button>
+            <button class="hr-quick-btn" data-action="policies">HR Policies</button>
+            <button class="hr-quick-btn" data-action="directory">Employee Directory</button>
         </div>
     </div>
 
