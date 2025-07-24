@@ -303,7 +303,7 @@ class TrelloAI {
         panel.classList.toggle('hidden');
     }
 
-    sendAIMessage() {
+    async sendAIMessage() {
         const input = document.getElementById('ai-input');
         const message = input.value.trim();
         
@@ -314,18 +314,68 @@ class TrelloAI {
         
         input.value = '';
         
-        // Simulate AI response
-        setTimeout(() => {
-            const response = this.generateAIResponse(message);
+        // Show typing indicator
+        this.aiMessages.push({ type: 'ai', content: 'AI is thinking...', isTyping: true });
+        this.renderAIMessages();
+        
+        // Generate AI response
+        try {
+            const response = await this.generateAIResponse(message);
+            
+            // Remove typing indicator
+            this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
+            
             this.aiMessages.push({ type: 'ai', content: response });
             this.renderAIMessages();
-        }, 1000);
+        } catch (error) {
+            // Remove typing indicator
+            this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
+            
+            this.aiMessages.push({ 
+                type: 'ai', 
+                content: 'Sorry, I encountered an error. Please try again or use the HR chat for assistance.' 
+            });
+            this.renderAIMessages();
+        }
     }
 
-    generateAIResponse(userMessage) {
+    async generateAIResponse(userMessage) {
+        try {
+            // Try to get response from ChatGPT 4o via backend API
+            const response = await fetch('/ai-chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    context: 'task_management'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Check if AI suggested creating a task
+                if (data.action === 'create_task' && data.task_name) {
+                    this.createAITask(data.task_name);
+                    return data.response + ` I've created the task "${data.task_name}" for you.`;
+                }
+                
+                return data.response;
+            }
+        } catch (error) {
+            console.log('ChatGPT API unavailable, using fallback responses:', error);
+        }
+        
+        // Fallback to simple AI logic if API is unavailable
+        return this.generateFallbackResponse(userMessage);
+    }
+    
+    generateFallbackResponse(userMessage) {
         const lowerMessage = userMessage.toLowerCase();
         
-        // Simple AI response logic
+        // Simple AI response logic (fallback)
         if (lowerMessage.includes('task') || lowerMessage.includes('card')) {
             const suggestions = [
                 "I suggest breaking this down into smaller tasks for better tracking.",

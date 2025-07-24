@@ -37,9 +37,9 @@ class HRKnowledgeBase:
         # Configure LlamaIndex settings if available
         if LLAMA_INDEX_AVAILABLE:
             try:
-                # Set up OpenAI LLM and embeddings
+                # Set up OpenAI LLM and embeddings with GPT-4o
                 Settings.llm = OpenAI(
-                    model="gpt-3.5-turbo",
+                    model="gpt-4o",
                     temperature=0.1,
                     api_key=os.getenv("OPENAI_API_KEY")
                 )

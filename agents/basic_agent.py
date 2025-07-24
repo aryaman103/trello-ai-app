@@ -160,9 +160,9 @@ class HRAgent:
     def _initialize_langchain_agent(self):
         """Initialize the LangChain agent with tools"""
         try:
-            # Initialize LLM
+            # Initialize LLM with GPT-4o
             llm = ChatOpenAI(
-                model="gpt-3.5-turbo",
+                model="gpt-4o",
                 temperature=0.1,
                 openai_api_key=self.openai_api_key
             )

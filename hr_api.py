@@ -9,6 +9,14 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uuid
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    print("python-dotenv not available. Install with: pip install python-dotenv")
+    pass
+
 try:
     from fastapi import FastAPI, HTTPException
     from fastapi.middleware.cors import CORSMiddleware
@@ -136,6 +144,84 @@ if FASTAPI_AVAILABLE:
             timestamp=datetime.now().isoformat()
         )
     
+    @app.post("/ai-chat")
+    async def chat_with_ai_assistant(request: dict):
+        """
+        Chat with the AI assistant powered by ChatGPT 4o for task management
+        
+        Args:
+            request: Dictionary containing message and context
+            
+        Returns:
+            AI response for task management queries
+        """
+        if not HR_MODULES_AVAILABLE:
+            raise HTTPException(
+                status_code=503,
+                detail="AI assistant not available"
+            )
+        
+        try:
+            from langchain_openai import ChatOpenAI
+            
+            # Initialize ChatGPT 4o for task management
+            llm = ChatOpenAI(
+                model="gpt-4o",
+                temperature=0.1,
+                openai_api_key=os.getenv("OPENAI_API_KEY")
+            )
+            
+            user_message = request.get("message", "")
+            context = request.get("context", "general")
+            
+            # Create task management prompt
+            system_prompt = """You are an intelligent task management assistant integrated into a Trello-like application. 
+Your role is to help users organize tasks, improve productivity, and manage their projects effectively.
+
+Key capabilities:
+- Analyze user requests for task creation, organization, and management
+- Provide intelligent suggestions for task optimization
+- Help with project planning and workflow improvements
+- Suggest task breakdowns and prioritization
+
+If the user asks you to create a task, respond with a JSON-like structure:
+{"action": "create_task", "task_name": "extracted task name", "response": "your response"}
+
+Otherwise, provide helpful task management advice and suggestions.
+Be concise, actionable, and focused on productivity improvements."""
+
+            # Generate response
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ]
+            
+            response = llm.invoke(messages)
+            ai_response = response.content
+            
+            # Check if response suggests creating a task
+            if "create_task" in ai_response.lower() and "{" in ai_response:
+                try:
+                    import json
+                    # Try to extract JSON-like response
+                    json_start = ai_response.find("{")
+                    json_end = ai_response.rfind("}") + 1
+                    if json_start != -1 and json_end != -1:
+                        json_part = ai_response[json_start:json_end]
+                        parsed = json.loads(json_part)
+                        return parsed
+                except:
+                    pass
+            
+            return {"response": ai_response}
+            
+        except Exception as e:
+            logger.error(f"AI assistant error: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail="AI assistant temporarily unavailable"
+            )
+
     @app.post("/chat", response_model=ChatResponse)
     async def chat_with_hr_bot(request: ChatRequest):
         """
