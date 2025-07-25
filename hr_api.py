@@ -47,6 +47,17 @@ class ChatRequest(BaseModel):
     user_id: Optional[str] = None
     session_id: Optional[str] = None
 
+class FeedbackRequest(BaseModel):
+    messageId: str
+    rating: int  # 1 for positive, 0 for negative
+    feedback: Optional[str] = None
+    type: str = "ai_assistant"
+
+class EscalationRequest(BaseModel):
+    issueType: str
+    description: str
+    conversationHistory: Optional[List[Dict]] = None
+
 class ChatResponse(BaseModel):
     response: str
     user_id: str
@@ -369,6 +380,113 @@ Be concise, actionable, and focused on productivity improvements."""
             return status
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+    
+    # Feedback and Escalation Endpoints
+    @app.post("/api/feedback")
+    async def submit_feedback(feedback: FeedbackRequest):
+        """Submit user feedback for AI responses"""
+        try:
+            # Store feedback data (in production, this would go to a database)
+            feedback_data = {
+                "id": str(uuid.uuid4()),
+                "messageId": feedback.messageId,
+                "rating": feedback.rating,
+                "feedback": feedback.feedback,
+                "type": feedback.type,
+                "timestamp": datetime.now().isoformat(),
+                "processed": False
+            }
+            
+            # Log feedback for monitoring
+            logger.info(f"Feedback received: Rating={feedback.rating}, Type={feedback.type}")
+            if feedback.feedback:
+                logger.info(f"User feedback text: {feedback.feedback}")
+            
+            # In a real system, save to database
+            # For now, just log and return success
+            print(f"FEEDBACK STORED: {feedback_data}")
+            
+            return {
+                "message": "Feedback submitted successfully",
+                "feedback_id": feedback_data["id"],
+                "status": "received"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing feedback: {e}")
+            raise HTTPException(status_code=500, detail="Failed to process feedback")
+    
+    @app.post("/api/escalate")
+    async def escalate_issue(escalation: EscalationRequest):
+        """Escalate user issue to support team"""
+        try:
+            # Generate ticket ID
+            ticket_id = f"AI-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:6].upper()}"
+            
+            escalation_data = {
+                "id": str(uuid.uuid4()),
+                "ticketId": ticket_id,
+                "issueType": escalation.issueType,
+                "description": escalation.description,
+                "conversationHistory": escalation.conversationHistory or [],
+                "timestamp": datetime.now().isoformat(),
+                "status": "open",
+                "priority": "normal",
+                "source": "ai_assistant",
+                "assignedTo": "Support Team"
+            }
+            
+            # Determine priority based on keywords
+            urgent_keywords = ['urgent', 'critical', 'emergency', 'asap', 'immediately']
+            if any(keyword in escalation.description.lower() for keyword in urgent_keywords):
+                escalation_data["priority"] = "high"
+                logger.warning(f"HIGH PRIORITY escalation created: {ticket_id}")
+            
+            # Log escalation
+            logger.info(f"Escalation created: Ticket={ticket_id}, Type={escalation.issueType}")
+            
+            # In a real system, this would:
+            # 1. Save to database
+            # 2. Send notifications to support team
+            # 3. Create ticket in helpdesk system
+            print(f"ESCALATION CREATED: {escalation_data}")
+            
+            # Simulate escalation to HR if it's HR-related
+            if escalation.issueType in ['hr', 'policy', 'benefits']:
+                try:
+                    # Use existing HR escalation tool
+                    from agents.tools import escalate_to_hr
+                    hr_result = escalate_to_hr(
+                        user_id="ai_user", 
+                        issue_type=escalation.issueType, 
+                        description=escalation.description
+                    )
+                    escalation_data["hr_ticket_id"] = hr_result.get("ticket_id")
+                    logger.info(f"Also escalated to HR: {hr_result.get('ticket_id')}")
+                except Exception as hr_error:
+                    logger.error(f"HR escalation failed: {hr_error}")
+            
+            return {
+                "message": "Issue escalated successfully",
+                "ticket_id": ticket_id,
+                "status": "escalated",
+                "priority": escalation_data["priority"],
+                "estimated_response": "2 business days" if escalation_data["priority"] == "normal" else "4 hours"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing escalation: {e}")
+            raise HTTPException(status_code=500, detail="Failed to process escalation")
+    
+    @app.get("/api/feedback/analytics")
+    async def get_feedback_analytics():
+        """Get feedback analytics (for admin/monitoring)"""
+        # In a real system, this would query the database
+        # For now, return mock analytics
+        return {
+            "message": "Analytics endpoint - would return feedback statistics",
+            "note": "In production, this would query feedback database for metrics"
+        }
 
 else:
     # Fallback if FastAPI not available

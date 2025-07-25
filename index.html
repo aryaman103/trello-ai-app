@@ -28,6 +28,12 @@
                 <button id="ai-send-btn">Send</button>
             </div>
         </div>
+        <div class="ai-feedback-section">
+            <div class="feedback-header">
+                <h4>Having issues? Need help?</h4>
+                <button id="escalate-btn" class="escalate-btn">🚨 Escalate to Support</button>
+            </div>
+        </div>
     </div>
 
     <div id="hr-panel" class="hr-panel hidden">
@@ -66,6 +72,58 @@
                 <div class="modal-actions">
                     <button id="modal-cancel" class="btn-secondary">Cancel</button>
                     <button id="modal-confirm" class="btn-primary">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="feedback-modal-title">Rate this response</h3>
+                <button id="feedback-modal-close" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="feedback-rating">
+                    <button class="rating-btn" data-rating="1">👍 Helpful</button>
+                    <button class="rating-btn" data-rating="0">👎 Not helpful</button>
+                </div>
+                <div class="feedback-details hidden">
+                    <textarea id="feedback-text" placeholder="Tell us how we can improve (optional)..." rows="3"></textarea>
+                    <div class="modal-actions">
+                        <button id="feedback-cancel" class="btn-secondary">Skip</button>
+                        <button id="feedback-submit" class="btn-primary">Submit Feedback</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Escalation Modal -->
+    <div id="escalation-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Escalate to Support</h3>
+                <button id="escalation-modal-close" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="escalation-form">
+                    <label for="issue-type">Issue Type:</label>
+                    <select id="issue-type">
+                        <option value="technical">Technical Issue</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="other">Other</option>
+                    </select>
+                    
+                    <label for="issue-description">Description:</label>
+                    <textarea id="issue-description" placeholder="Please describe your issue or request..." rows="4" required></textarea>
+                    
+                    <div class="modal-actions">
+                        <button id="escalation-cancel" class="btn-secondary">Cancel</button>
+                        <button id="escalation-submit" class="btn-primary">Submit</button>
+                    </div>
                 </div>
             </div>
         </div>

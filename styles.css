@@ -488,3 +488,157 @@ h1 {
 .hr-quick-btn:last-child {
     margin-bottom: 0;
 }
+
+/* Feedback System Styles */
+.ai-feedback-section {
+    padding: 1rem;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.feedback-header {
+    text-align: center;
+}
+
+.feedback-header h4 {
+    margin-bottom: 0.75rem;
+    color: #495057;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.escalate-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.escalate-btn:hover {
+    background: #c82333;
+}
+
+.message-feedback {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+}
+
+.feedback-btn {
+    background: transparent;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #6c757d;
+    transition: all 0.15s ease;
+}
+
+.feedback-btn:hover {
+    background: #f8f9fa;
+    border-color: #adb5bd;
+}
+
+.feedback-btn.active {
+    background: #2c3e50;
+    color: white;
+    border-color: #2c3e50;
+}
+
+.feedback-rating {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.rating-btn {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.rating-btn:hover {
+    border-color: #2c3e50;
+    background: #f8f9fa;
+}
+
+.rating-btn.selected {
+    border-color: #2c3e50;
+    background: #2c3e50;
+    color: white;
+}
+
+.feedback-details {
+    margin-top: 1rem;
+}
+
+.feedback-details textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    resize: vertical;
+}
+
+.escalation-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.escalation-form select,
+.escalation-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+
+.escalation-form select {
+    background: white;
+    cursor: pointer;
+}
+
+.escalation-form textarea {
+    resize: vertical;
+}
+
+.ai-message-container {
+    position: relative;
+}
+
+.ai-message-container .message-feedback {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ai-message-container:hover .message-feedback {
+    opacity: 1;
+}
+
+.feedback-submitted {
+    font-size: 0.75rem;
+    color: #28a745;
+    font-weight: 500;
+}

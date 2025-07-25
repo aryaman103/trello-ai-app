@@ -4,6 +4,9 @@ class TrelloAI {
         this.aiMessages = [];
         this.hrMessages = [];
         this.hrApiUrl = 'http://localhost:8000'; // HR API endpoint
+        this.feedbackData = JSON.parse(localStorage.getItem('feedback-data') || '[]');
+        this.escalationData = JSON.parse(localStorage.getItem('escalation-data') || '[]');
+        this.currentFeedbackMessageId = null;
         this.init();
     }
 
@@ -46,6 +49,37 @@ class TrelloAI {
         // Click outside modal to close
         document.getElementById('modal').addEventListener('click', (e) => {
             if (e.target.id === 'modal') this.hideModal();
+        });
+
+        // Feedback and Escalation Event Listeners
+        this.setupFeedbackEventListeners();
+    }
+
+    setupFeedbackEventListeners() {
+        // Escalation button
+        document.getElementById('escalate-btn').addEventListener('click', () => this.showEscalationModal());
+
+        // Feedback modal
+        document.getElementById('feedback-modal-close').addEventListener('click', () => this.hideFeedbackModal());
+        document.getElementById('feedback-cancel').addEventListener('click', () => this.hideFeedbackModal());
+        document.getElementById('feedback-submit').addEventListener('click', () => this.submitFeedback());
+
+        // Rating buttons
+        document.querySelectorAll('.rating-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.selectRating(e.target.dataset.rating));
+        });
+
+        // Escalation modal
+        document.getElementById('escalation-modal-close').addEventListener('click', () => this.hideEscalationModal());
+        document.getElementById('escalation-cancel').addEventListener('click', () => this.hideEscalationModal());
+        document.getElementById('escalation-submit').addEventListener('click', () => this.submitEscalation());
+
+        // Click outside modals to close
+        document.getElementById('feedback-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'feedback-modal') this.hideFeedbackModal();
+        });
+        document.getElementById('escalation-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'escalation-modal') this.hideEscalationModal();
         });
     }
 
@@ -309,7 +343,13 @@ class TrelloAI {
         
         if (!message) return;
         
-        this.aiMessages.push({ type: 'user', content: message });
+        const userMessageId = Date.now().toString();
+        this.aiMessages.push({ 
+            type: 'user', 
+            content: message, 
+            id: userMessageId,
+            timestamp: new Date().toISOString()
+        });
         this.renderAIMessages();
         
         input.value = '';
@@ -325,15 +365,24 @@ class TrelloAI {
             // Remove typing indicator
             this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
             
-            this.aiMessages.push({ type: 'ai', content: response });
+            const aiMessageId = (Date.now() + 1).toString();
+            this.aiMessages.push({ 
+                type: 'ai', 
+                content: response, 
+                id: aiMessageId,
+                timestamp: new Date().toISOString()
+            });
             this.renderAIMessages();
         } catch (error) {
             // Remove typing indicator
             this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
             
+            const errorMessageId = (Date.now() + 1).toString();
             this.aiMessages.push({ 
                 type: 'ai', 
-                content: 'Sorry, I encountered an error. Please try again or use the HR chat for assistance.' 
+                content: 'Sorry, I encountered an error. Please try again or use the HR chat for assistance.',
+                id: errorMessageId,
+                timestamp: new Date().toISOString()
             });
             this.renderAIMessages();
         }
@@ -437,10 +486,40 @@ class TrelloAI {
         container.innerHTML = '';
         
         this.aiMessages.forEach(message => {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'ai-message-container';
+            if (message.id) {
+                messageContainer.setAttribute('data-message-id', message.id);
+            }
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${message.type}`;
             messageDiv.textContent = message.content;
-            container.appendChild(messageDiv);
+            messageContainer.appendChild(messageDiv);
+            
+            // Add feedback buttons only for AI messages (not user messages or typing indicators)
+            if (message.type === 'ai' && !message.isTyping && message.id) {
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'message-feedback';
+                
+                const thumbsUpBtn = document.createElement('button');
+                thumbsUpBtn.className = 'feedback-btn';
+                thumbsUpBtn.textContent = '👍';
+                thumbsUpBtn.title = 'Helpful';
+                thumbsUpBtn.onclick = () => this.showFeedbackModal(message.id, 1);
+                
+                const thumbsDownBtn = document.createElement('button');
+                thumbsDownBtn.className = 'feedback-btn';
+                thumbsDownBtn.textContent = '👎';
+                thumbsDownBtn.title = 'Not helpful';
+                thumbsDownBtn.onclick = () => this.showFeedbackModal(message.id, 0);
+                
+                feedbackDiv.appendChild(thumbsUpBtn);
+                feedbackDiv.appendChild(thumbsDownBtn);
+                messageContainer.appendChild(feedbackDiv);
+            }
+            
+            container.appendChild(messageContainer);
         });
         
         container.scrollTop = container.scrollHeight;
@@ -561,6 +640,184 @@ class TrelloAI {
         });
         
         container.scrollTop = container.scrollHeight;
+    }
+
+    // Feedback and Escalation Methods
+    showFeedbackModal(messageId, initialRating = null) {
+        this.currentFeedbackMessageId = messageId;
+        const modal = document.getElementById('feedback-modal');
+        const feedbackDetails = document.querySelector('.feedback-details');
+        const ratingBtns = document.querySelectorAll('.rating-btn');
+        
+        // Reset modal state
+        ratingBtns.forEach(btn => btn.classList.remove('selected'));
+        feedbackDetails.classList.add('hidden');
+        document.getElementById('feedback-text').value = '';
+        
+        // If initial rating provided, select it
+        if (initialRating !== null) {
+            const selectedBtn = document.querySelector(`[data-rating="${initialRating}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+                feedbackDetails.classList.remove('hidden');
+            }
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    hideFeedbackModal() {
+        document.getElementById('feedback-modal').classList.add('hidden');
+        this.currentFeedbackMessageId = null;
+    }
+
+    selectRating(rating) {
+        const ratingBtns = document.querySelectorAll('.rating-btn');
+        const feedbackDetails = document.querySelector('.feedback-details');
+        
+        ratingBtns.forEach(btn => btn.classList.remove('selected'));
+        document.querySelector(`[data-rating="${rating}"]`).classList.add('selected');
+        feedbackDetails.classList.remove('hidden');
+    }
+
+    async submitFeedback() {
+        const selectedRating = document.querySelector('.rating-btn.selected');
+        const feedbackText = document.getElementById('feedback-text').value.trim();
+        
+        if (!selectedRating || !this.currentFeedbackMessageId) return;
+        
+        const feedbackData = {
+            id: Date.now().toString(),
+            messageId: this.currentFeedbackMessageId,
+            rating: parseInt(selectedRating.dataset.rating),
+            feedback: feedbackText,
+            timestamp: new Date().toISOString(),
+            type: 'ai_assistant'
+        };
+        
+        this.feedbackData.push(feedbackData);
+        localStorage.setItem('feedback-data', JSON.stringify(this.feedbackData));
+        
+        // Send to backend if available
+        try {
+            await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(feedbackData)
+            });
+        } catch (error) {
+            console.log('Feedback stored locally, backend unavailable:', error);
+        }
+        
+        // Update UI to show feedback was submitted
+        const messageContainer = document.querySelector(`[data-message-id="${this.currentFeedbackMessageId}"]`);
+        if (messageContainer) {
+            const feedbackDiv = messageContainer.querySelector('.message-feedback');
+            if (feedbackDiv) {
+                feedbackDiv.innerHTML = '<span class="feedback-submitted">✓ Feedback submitted</span>';
+            }
+        }
+        
+        this.hideFeedbackModal();
+        
+        // Show thank you message
+        this.aiMessages.push({
+            type: 'ai',
+            content: 'Thank you for your feedback! It helps us improve the AI assistant.',
+            id: Date.now().toString(),
+            timestamp: new Date().toISOString(),
+            isSystemMessage: true
+        });
+        this.renderAIMessages();
+    }
+
+    showEscalationModal() {
+        document.getElementById('escalation-modal').classList.remove('hidden');
+        document.getElementById('issue-type').value = 'technical';
+        document.getElementById('issue-description').value = '';
+    }
+
+    hideEscalationModal() {
+        document.getElementById('escalation-modal').classList.add('hidden');
+    }
+
+    async submitEscalation() {
+        const issueType = document.getElementById('issue-type').value;
+        const description = document.getElementById('issue-description').value.trim();
+        
+        if (!description) {
+            alert('Please provide a description of your issue.');
+            return;
+        }
+        
+        const escalationData = {
+            id: Date.now().toString(),
+            ticketId: `AI-${Date.now().toString().slice(-6)}`,
+            issueType: issueType,
+            description: description,
+            timestamp: new Date().toISOString(),
+            status: 'open',
+            priority: 'normal',
+            source: 'ai_assistant',
+            conversationHistory: this.aiMessages.slice(-5) // Include last 5 messages for context
+        };
+        
+        this.escalationData.push(escalationData);
+        localStorage.setItem('escalation-data', JSON.stringify(this.escalationData));
+        
+        // Send to backend if available
+        try {
+            await fetch('/api/escalate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(escalationData)
+            });
+        } catch (error) {
+            console.log('Escalation stored locally, backend unavailable:', error);
+        }
+        
+        this.hideEscalationModal();
+        
+        // Add confirmation message to chat
+        this.aiMessages.push({
+            type: 'ai',
+            content: `Your issue has been escalated to our support team. Ticket ID: ${escalationData.ticketId}. You can expect a response within 2 business days.`,
+            id: Date.now().toString(),
+            timestamp: new Date().toISOString(),
+            isSystemMessage: true
+        });
+        this.renderAIMessages();
+        
+        // Auto-escalate severe issues (simulate intelligent escalation)
+        if (description.toLowerCase().includes('urgent') || description.toLowerCase().includes('critical')) {
+            setTimeout(() => {
+                this.aiMessages.push({
+                    type: 'ai',
+                    content: '🚨 Due to the urgent nature of your request, this has been marked as high priority and escalated to senior support.',
+                    id: Date.now().toString(),
+                    timestamp: new Date().toISOString(),
+                    isSystemMessage: true
+                });
+                this.renderAIMessages();
+            }, 1000);
+        }
+    }
+
+    // Get feedback analytics (for admin/development purposes)
+    getFeedbackAnalytics() {
+        const totalFeedback = this.feedbackData.length;
+        const positiveFeedback = this.feedbackData.filter(f => f.rating === 1).length;
+        const negativeFeedback = this.feedbackData.filter(f => f.rating === 0).length;
+        const satisfactionRate = totalFeedback > 0 ? (positiveFeedback / totalFeedback * 100).toFixed(1) : 0;
+        
+        return {
+            totalFeedback,
+            positiveFeedback,
+            negativeFeedback,
+            satisfactionRate: `${satisfactionRate}%`,
+            escalations: this.escalationData.length,
+            recentFeedback: this.feedbackData.slice(-10)
+        };
     }
 }
 
