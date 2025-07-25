@@ -6,25 +6,25 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f8f9fa;
     min-height: 100vh;
-    color: #333;
+    color: #2c3e50;
 }
 
 header {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 1rem 2rem;
+    background: white;
+    padding: 1.5rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e9ecef;
 }
 
 h1 {
-    color: #667eea;
-    font-size: 2rem;
-    font-weight: 700;
+    color: #2c3e50;
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
 }
 
 .header-controls {
@@ -33,51 +33,51 @@ h1 {
 }
 
 .btn-primary, .btn-secondary, .ai-button {
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1.25rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 500;
-    transition: all 0.2s;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
 }
 
 .btn-primary {
-    background: #667eea;
+    background: #2c3e50;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #5a6fd8;
-    transform: translateY(-1px);
+    background: #34495e;
 }
 
 .btn-secondary {
-    background: #f1f3f4;
-    color: #333;
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
 }
 
 .btn-secondary:hover {
-    background: #e8eaed;
+    background: #f8f9fa;
+    border-color: #adb5bd;
 }
 
 .ai-button {
-    background: #ff6b6b;
+    background: #495057;
     color: white;
 }
 
 .ai-button:hover {
-    background: #ff5252;
-    transform: translateY(-1px);
+    background: #6c757d;
 }
 
 .hr-button {
-    background: #4caf50;
+    background: #6c757d;
     color: white;
 }
 
 .hr-button:hover {
-    background: #45a049;
-    transform: translateY(-1px);
+    background: #495057;
 }
 
 .board-container {
@@ -89,13 +89,12 @@ h1 {
 }
 
 .board {
-    background: rgba(255, 255, 255, 0.95);
+    background: white;
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.5rem;
     min-width: 300px;
     max-width: 300px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    backdrop-filter: blur(10px);
+    border: 1px solid #e9ecef;
     height: fit-content;
 }
 
@@ -107,9 +106,10 @@ h1 {
 }
 
 .board-title {
-    font-size: 1.2rem;
+    font-size: 1.125rem;
     font-weight: 600;
-    color: #333;
+    color: #2c3e50;
+    letter-spacing: -0.25px;
 }
 
 .board-menu {
@@ -135,6 +135,7 @@ h1 {
     background: #f8f9fa;
     border-radius: 8px;
     padding: 1rem;
+    border: 1px solid #f1f3f4;
 }
 
 .list-header {
@@ -146,7 +147,10 @@ h1 {
 
 .list-title {
     font-weight: 600;
-    color: #333;
+    color: #495057;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .add-card-btn {
@@ -167,34 +171,35 @@ h1 {
 
 .card {
     background: white;
-    border-radius: 6px;
-    padding: 0.75rem;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #f1f3f4;
     cursor: pointer;
-    transition: all 0.2s;
-    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
 }
 
 .card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-color: #dee2e6;
     transform: translateY(-1px);
 }
 
 .card.ai-suggested {
-    border-left-color: #ff6b6b;
-    background: linear-gradient(to right, #fff5f5, white);
+    border-left: 3px solid #6c757d;
+    background: #f8f9fa;
 }
 
 .card-title {
-    font-weight: 500;
-    margin-bottom: 0.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+    font-size: 0.875rem;
 }
 
 .card-description {
-    font-size: 0.875rem;
-    color: #666;
-    line-height: 1.4;
+    font-size: 0.8125rem;
+    color: #6c757d;
+    line-height: 1.5;
 }
 
 .ai-panel {
@@ -204,10 +209,10 @@ h1 {
     width: 400px;
     height: 100vh;
     background: white;
-    box-shadow: -2px 0 20px rgba(0,0,0,0.15);
+    border-left: 1px solid #e9ecef;
     z-index: 1000;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
 }
 
 .ai-panel:not(.hidden) {
@@ -215,12 +220,12 @@ h1 {
 }
 
 .ai-header {
-    padding: 1rem;
-    border-bottom: 1px solid #e1e5e9;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f8f9fa;
+    background: white;
 }
 
 .ai-chat {
@@ -243,7 +248,7 @@ h1 {
 }
 
 .ai-message.user {
-    background: #667eea;
+    background: #2c3e50;
     color: white;
     margin-left: auto;
 }
@@ -269,11 +274,12 @@ h1 {
 
 #ai-send-btn {
     padding: 0.5rem 1rem;
-    background: #667eea;
+    background: #2c3e50;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.875rem;
 }
 
 .modal {
@@ -298,7 +304,7 @@ h1 {
     border-radius: 12px;
     padding: 0;
     min-width: 400px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 1px solid #e9ecef;
 }
 
 .modal-header {
@@ -368,10 +374,10 @@ h1 {
     width: 400px;
     height: 100vh;
     background: white;
-    box-shadow: 2px 0 20px rgba(0,0,0,0.15);
+    border-right: 1px solid #e9ecef;
     z-index: 1000;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.25s ease;
 }
 
 .hr-panel:not(.hidden) {
@@ -379,12 +385,12 @@ h1 {
 }
 
 .hr-header {
-    padding: 1rem;
-    border-bottom: 1px solid #e1e5e9;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #f0f8f0;
+    background: white;
 }
 
 .hr-chat {
@@ -407,7 +413,7 @@ h1 {
 }
 
 .hr-message.user {
-    background: #4caf50;
+    background: #495057;
     color: white;
     margin-left: auto;
 }
@@ -433,15 +439,16 @@ h1 {
 
 #hr-send-btn {
     padding: 0.5rem 1rem;
-    background: #4caf50;
+    background: #495057;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
+    font-size: 0.875rem;
 }
 
 #hr-send-btn:hover {
-    background: #45a049;
+    background: #6c757d;
 }
 
 .hr-quick-actions {
@@ -473,9 +480,9 @@ h1 {
 }
 
 .hr-quick-btn:hover {
-    background: #4caf50;
+    background: #495057;
     color: white;
-    border-color: #4caf50;
+    border-color: #495057;
 }
 
 .hr-quick-btn:last-child {
