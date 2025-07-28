@@ -3,7 +3,8 @@ class TrelloAI {
         this.boards = JSON.parse(localStorage.getItem('trello-boards') || '[]');
         this.aiMessages = [];
         this.hrMessages = [];
-        this.hrApiUrl = 'http://localhost:8000'; // HR API endpoint
+        this.apiUrl = 'http://localhost:8000'; // Enhanced AI API endpoint
+        this.sessionId = null; // Track session for conversation continuity
         this.feedbackData = JSON.parse(localStorage.getItem('feedback-data') || '[]');
         this.escalationData = JSON.parse(localStorage.getItem('escalation-data') || '[]');
         this.currentFeedbackMessageId = null;
@@ -358,9 +359,9 @@ class TrelloAI {
         this.aiMessages.push({ type: 'ai', content: 'AI is thinking...', isTyping: true });
         this.renderAIMessages();
         
-        // Generate AI response
+        // Generate enhanced AI response
         try {
-            const response = await this.generateAIResponse(message);
+            const response = await this.callEnhancedAI(message);
             
             // Remove typing indicator
             this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
@@ -368,11 +369,35 @@ class TrelloAI {
             const aiMessageId = (Date.now() + 1).toString();
             this.aiMessages.push({ 
                 type: 'ai', 
-                content: response, 
+                content: response.response, 
                 id: aiMessageId,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                confidence: response.confidence_score,
+                toolsUsed: response.tools_used,
+                escalation: response.escalation
             });
             this.renderAIMessages();
+            
+            // Handle escalation if needed
+            if (response.escalation.should_escalate) {
+                setTimeout(() => {
+                    const escalationMessageId = (Date.now() + 2).toString();
+                    this.aiMessages.push({
+                        type: 'ai',
+                        content: response.escalation_message || 'This request has been escalated for human assistance.',
+                        id: escalationMessageId,
+                        timestamp: new Date().toISOString(),
+                        isEscalation: true
+                    });
+                    this.renderAIMessages();
+                }, 1000);
+            }
+            
+            // Refresh boards if tools were used
+            if (response.tools_used.length > 0) {
+                setTimeout(() => this.refreshBoardsFromAPI(), 2000);
+            }
+            
         } catch (error) {
             // Remove typing indicator
             this.aiMessages = this.aiMessages.filter(msg => !msg.isTyping);
@@ -380,11 +405,13 @@ class TrelloAI {
             const errorMessageId = (Date.now() + 1).toString();
             this.aiMessages.push({ 
                 type: 'ai', 
-                content: 'Sorry, I encountered an error. Please try again or use the HR chat for assistance.',
+                content: 'I apologize, but I encountered an error connecting to my enhanced AI system. Please check if the backend server is running.',
                 id: errorMessageId,
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                isError: true
             });
             this.renderAIMessages();
+            console.error('Enhanced AI API Error:', error);
         }
     }
 
@@ -481,6 +508,47 @@ class TrelloAI {
         }
     }
 
+    // Enhanced AI API integration
+    async callEnhancedAI(message) {
+        const response = await fetch(`${this.apiUrl}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                session_id: this.sessionId
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Store session ID for conversation continuity
+        if (data.session_id) {
+            this.sessionId = data.session_id;
+        }
+
+        return data;
+    }
+
+    async refreshBoardsFromAPI() {
+        try {
+            const response = await fetch(`${this.apiUrl}/boards`);
+            if (response.ok) {
+                const data = await response.json();
+                // Update local boards with API data if available
+                console.log('Boards refreshed from API:', data);
+                // You could merge API boards with local boards here
+            }
+        } catch (error) {
+            console.log('Could not refresh from API:', error);
+        }
+    }
+
     renderAIMessages() {
         const container = document.getElementById('ai-messages');
         container.innerHTML = '';
@@ -494,8 +562,46 @@ class TrelloAI {
             
             const messageDiv = document.createElement('div');
             messageDiv.className = `ai-message ${message.type}`;
+            if (message.isError) {
+                messageDiv.classList.add('error');
+            }
+            if (message.isEscalation) {
+                messageDiv.classList.add('escalation');
+            }
             messageDiv.textContent = message.content;
             messageContainer.appendChild(messageDiv);
+            
+            // Add confidence indicator and tools info for enhanced AI messages
+            if (message.type === 'ai' && !message.isTyping && message.confidence !== undefined) {
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'ai-message-meta';
+                
+                // Confidence indicator
+                const confidenceSpan = document.createElement('span');
+                confidenceSpan.className = 'confidence-indicator';
+                const confidenceLevel = message.confidence >= 0.8 ? 'high' : message.confidence >= 0.6 ? 'medium' : 'low';
+                confidenceSpan.className += ` confidence-${confidenceLevel}`;
+                confidenceSpan.textContent = `Confidence: ${Math.round(message.confidence * 100)}%`;
+                metaDiv.appendChild(confidenceSpan);
+                
+                // Tools used indicator
+                if (message.toolsUsed && message.toolsUsed.length > 0) {
+                    const toolsSpan = document.createElement('span');
+                    toolsSpan.className = 'tools-used';
+                    toolsSpan.textContent = `Tools: ${message.toolsUsed.join(', ')}`;
+                    metaDiv.appendChild(toolsSpan);
+                }
+                
+                // Escalation indicator
+                if (message.escalation && message.escalation.should_escalate) {
+                    const escalationSpan = document.createElement('span');
+                    escalationSpan.className = 'escalation-indicator';
+                    escalationSpan.textContent = `⚠️ Escalated: ${message.escalation.escalation_type}`;
+                    metaDiv.appendChild(escalationSpan);
+                }
+                
+                messageContainer.appendChild(metaDiv);
+            }
             
             // Add feedback buttons only for AI messages (not user messages or typing indicators)
             if (message.type === 'ai' && !message.isTyping && message.id) {
@@ -590,7 +696,7 @@ class TrelloAI {
     }
 
     async callHRAPI(endpoint, options = {}) {
-        const url = `${this.hrApiUrl}${endpoint}`;
+        const url = `${this.apiUrl}${endpoint}`;
         const response = await fetch(url, {
             ...options,
             headers: {

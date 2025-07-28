@@ -1,6 +1,6 @@
-# HR Bot Setup Instructions
+# Trello AI Enhanced Setup Guide
 
-This document provides step-by-step instructions for setting up the HR Bot functionality in your Trello AI application.
+This document provides setup instructions for the enhanced Trello AI application with LangChain, GPT-4, structured tools, and confidence-based escalation.
 
 ## Quick Start
 
